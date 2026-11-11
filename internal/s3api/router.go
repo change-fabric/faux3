@@ -19,8 +19,9 @@ const healthPath = "/-/healthz"
 type Server struct {
 	Store    store.Store
 	Verifier *sigv4.Verifier
-	// Region is reported by HeadBucket and GetBucketLocation and is the
-	// only accepted CreateBucket LocationConstraint.
+	// Region is reported by HeadBucket, recorded on each new bucket as its
+	// GetBucketLocation constraint, and is the only accepted CreateBucket
+	// LocationConstraint.
 	Region string
 	// CORSOrigins enables CORS when non-empty; "*" allows any origin.
 	CORSOrigins []string

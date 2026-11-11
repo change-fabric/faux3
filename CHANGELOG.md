@@ -5,6 +5,10 @@ The format is based on Keep a Changelog, and this project uses Semantic Versioni
 
 ## [Unreleased]
 
+### Changed
+
+- GetBucketLocation now returns the region recorded for each bucket at creation, read from `.bucket.json`, instead of echoing the live `FAUX3_REGION`. us-east-1 is still reported as an empty LocationConstraint. Buckets created before this change report the store's configured region. ADR 0012.
+
 ## [0.1.0] - 2026-11-10
 
 ### Added

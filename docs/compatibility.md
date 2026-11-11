@@ -15,7 +15,7 @@ Faux3 implements nine S3 operations over path-style addressing (`http://host:900
 | HeadObject | [API_HeadObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html) | Same as GetObject | Errors carry no body, as in S3. |
 | DeleteObject | [API_DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html) | none | Deleting a missing key returns 204, as in S3. |
 | ListObjectsV2 | [API_ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html) | prefix, delimiter, max-keys (capped at 1000), continuation-token, start-after, fetch-owner, encoding-type=url | Keys sort by byte order. Continuation tokens are opaque base64url of the last key. |
-| GetBucketLocation | [API_GetBucketLocation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html) | `?location` | Stub, not advertised. Returns `FAUX3_REGION` so the AWS CLI can discover the region. |
+| GetBucketLocation | [API_GetBucketLocation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html) | `?location` | Returns the region recorded for the bucket when it was created. us-east-1 is reported as an empty LocationConstraint, as in S3. |
 
 ## Authentication
 

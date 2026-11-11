@@ -8,7 +8,7 @@ Do not edit `/data` by hand. The layout is an implementation detail, versioned b
 /data/.faux3/format                                   "1\n"
 /data/.faux3/lock                                     exclusive flock, one process per data dir
 /data/.faux3/tmp/                                     staging, same filesystem
-/data/buckets/<bucket>/.bucket.json                   {"name": ..., "created": RFC3339Nano}
+/data/buckets/<bucket>/.bucket.json                   {"name": ..., "created": RFC3339Nano, "region": ...}
 /data/buckets/<bucket>/objects/<h[0:2]>/<h>/data      object bytes
 /data/buckets/<bucket>/objects/<h[0:2]>/<h>/meta.json object metadata
 ```

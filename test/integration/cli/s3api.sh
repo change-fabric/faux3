@@ -7,6 +7,11 @@ aws s3api create-bucket --bucket "$B" >/dev/null
 aws s3api list-buckets --query 'Buckets[].Name' --output text | tr '\t' '\n' | grep -qx "$B"
 aws s3api head-bucket --bucket "$B" >/dev/null
 
+# GetBucketLocation returns the recorded region. us-east-1 (the test
+# region) is reported as the empty constraint, which the CLI prints as None.
+loc=$(aws s3api get-bucket-location --bucket "$B" --query 'LocationConstraint' --output text)
+[ "$loc" = None ] || [ -z "$loc" ] || { echo "location: $loc" >&2; exit 1; }
+
 head -c 100000 /dev/urandom >"$TMP/body"
 etag=$(aws s3api put-object --bucket "$B" --key "dir/one file" --body "$TMP/body" --content-type application/x-test \
   --metadata color=blue --query ETag --output text)

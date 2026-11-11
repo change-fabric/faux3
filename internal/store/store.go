@@ -48,6 +48,10 @@ type Meta struct {
 type Bucket struct {
 	Name    string    `json:"name"`
 	Created time.Time `json:"created"`
+	// Region is the LocationConstraint recorded when the bucket was
+	// created. Buckets written before this field existed report the
+	// store's configured region.
+	Region string `json:"region,omitempty"`
 }
 
 // PutInput is the request side of PutObject.

@@ -3,6 +3,7 @@ package store
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -222,6 +223,74 @@ func TestBuckets(t *testing.T) {
 	}
 	if err := s.CreateBucket("bkt"); err != nil {
 		t.Fatalf("recreate = %v", err)
+	}
+}
+
+func TestBucketRegionRecordedAndReopened(t *testing.T) {
+	dir := t.TempDir()
+	s, err := Open(Options{Dir: dir, Region: "eu-west-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.CreateBucket("bkt"); err != nil {
+		t.Fatal(err)
+	}
+	b, err := s.HeadBucket("bkt")
+	if err != nil || b.Region != "eu-west-1" {
+		t.Fatalf("head = %+v, %v", b, err)
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	// A different configured region does not rewrite the recorded one.
+	s2, err := Open(Options{Dir: dir, Region: "us-west-2"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s2.Close() })
+	if b, err := s2.HeadBucket("bkt"); err != nil || b.Region != "eu-west-1" {
+		t.Fatalf("head after reopen = %+v, %v", b, err)
+	}
+}
+
+func TestBucketRegionLegacyDefault(t *testing.T) {
+	dir := t.TempDir()
+	s, err := Open(Options{Dir: dir, Region: "eu-west-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.CreateBucket("bkt"); err != nil {
+		t.Fatal(err)
+	}
+	// Rewrite .bucket.json without a region, as faux3 0.1.0 wrote it.
+	bj := filepath.Join(dir, "buckets", "bkt", ".bucket.json")
+	raw, err := os.ReadFile(bj)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	delete(m, "region")
+	legacy, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(bj, legacy, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	// A bucket with no recorded region falls back to the configured region.
+	s2, err := Open(Options{Dir: dir, Region: "ap-south-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s2.Close() })
+	if b, err := s2.HeadBucket("bkt"); err != nil || b.Region != "ap-south-1" {
+		t.Fatalf("legacy head = %+v, %v", b, err)
 	}
 }
 

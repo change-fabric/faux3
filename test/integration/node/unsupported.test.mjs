@@ -2,7 +2,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import {
   CopyObjectCommand, DeleteObjectsCommand, CreateMultipartUploadCommand, PutBucketVersioningCommand,
-  GetObjectAclCommand, ListObjectsCommand, PutObjectCommand, GetBucketLocationCommand,
+  GetObjectAclCommand, ListObjectsCommand, PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { client, uniqueBucket, createBucket, emptyAndDelete, expectS3Error, closeClients } from "./lib.mjs";
 
@@ -31,8 +31,3 @@ for (const [name, make] of Object.entries(cases)) {
     await expectS3Error(assert, client.send(make()), "NotImplemented", 501);
   });
 }
-
-test("GetBucketLocation stub works", async () => {
-  const out = await client.send(new GetBucketLocationCommand({ Bucket }));
-  assert.equal(out.$metadata.httpStatusCode, 200);
-});

@@ -75,14 +75,16 @@ func (s *Server) deleteBucket(w http.ResponseWriter, r *http.Request, req *reque
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// getBucketLocation is a stub for CLI region discovery, not an advertised
-// operation: it reports the configured region (empty for us-east-1).
+// getBucketLocation returns the LocationConstraint recorded for the bucket
+// when it was created. As in S3, the us-east-1 region is reported as an
+// empty constraint.
 func (s *Server) getBucketLocation(w http.ResponseWriter, r *http.Request, req *request) {
-	if _, err := s.Store.HeadBucket(req.bucket); err != nil {
+	b, err := s.Store.HeadBucket(req.bucket)
+	if err != nil {
 		writeError(w, r, err, req.bucket, "")
 		return
 	}
-	region := s.Region
+	region := b.Region
 	if region == "us-east-1" {
 		region = ""
 	}

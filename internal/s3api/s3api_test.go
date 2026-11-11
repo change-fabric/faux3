@@ -361,6 +361,35 @@ func TestPathEdgeCases(t *testing.T) {
 	}
 }
 
+func TestGetBucketLocationRegion(t *testing.T) {
+	st, err := store.Open(store.Options{Dir: t.TempDir(), MaxObjectSize: 1 << 20, Region: "eu-west-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := &Server{
+		Store: st,
+		Verifier: &sigv4.Verifier{AccessKeyID: "faux3", SecretAccessKey: "faux3", Region: "eu-west-1",
+			ClockSkew: 15 * time.Minute, Now: func() time.Time { return testNow }},
+		Region: "eu-west-1",
+	}
+	eu := sigv4.Signer{AccessKeyID: "faux3", SecretAccessKey: "faux3", Region: "eu-west-1"}
+	do := func(method, target string, body []byte) *httptest.ResponseRecorder {
+		r := newReq(method, target, body)
+		eu.SignHeader(r, testNow, hashHex(body))
+		rec := httptest.NewRecorder()
+		srv.ServeHTTP(rec, r)
+		return rec
+	}
+	if rec := do("PUT", "/eu-bucket", nil); rec.Code != 200 {
+		t.Fatalf("create: %d %s", rec.Code, rec.Body)
+	}
+	rec := do("GET", "/eu-bucket?location", nil)
+	if rec.Code != 200 ||
+		!strings.Contains(rec.Body.String(), `<LocationConstraint xmlns="http://s3.amazonaws.com/doc/2006-03-01/">eu-west-1</LocationConstraint>`) {
+		t.Fatalf("location: %d %s", rec.Code, rec.Body)
+	}
+}
+
 func TestListObjectsV2(t *testing.T) {
 	h := newHarness(t)
 	h.expect(h.do("PUT", "/bkt", nil), 200, "")

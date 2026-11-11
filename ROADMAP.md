@@ -38,15 +38,6 @@ The original marker-based listing API.
 - Requires an ADR before implementation.
 - Issue: https://github.com/change-fabric/faux3/issues/4
 
-### GetBucketLocation (real)
-
-Today a minimal stub answers this for CLI region discovery. A real implementation would record and return the bucket's LocationConstraint.
-
-- Unblocks: tools that branch on bucket region, and an honest compatibility row instead of a stub.
-- AWS API: https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html
-- Requires an ADR before implementation.
-- Issue: https://github.com/change-fabric/faux3/issues/5
-
 ### Multipart upload
 
 Six operations as one unit: CreateMultipartUpload, UploadPart, CompleteMultipartUpload, AbortMultipartUpload, ListParts, ListMultipartUploads.

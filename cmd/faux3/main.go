@@ -59,7 +59,7 @@ func serve(stderr io.Writer) int {
 		return 1
 	}
 
-	st, err := store.Open(store.Options{Dir: cfg.DataDir, Fsync: cfg.Fsync, MaxObjectSize: cfg.MaxObjectSize, Logger: log})
+	st, err := store.Open(store.Options{Dir: cfg.DataDir, Fsync: cfg.Fsync, MaxObjectSize: cfg.MaxObjectSize, Region: cfg.Region, Logger: log})
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1

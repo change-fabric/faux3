@@ -57,6 +57,11 @@ func (s *FS) loadBucket(dir, name string) (*bucket, error) {
 		s.log.Warn("store: skipping bucket dir with bad .bucket.json", "dir", dir)
 		return nil, nil
 	}
+	// Buckets created before the region field existed report the store's
+	// configured region.
+	if b.info.Region == "" {
+		b.info.Region = s.region
+	}
 	objects := filepath.Join(dir, "objects")
 	shards, err := os.ReadDir(objects)
 	if errors.Is(err, fs.ErrNotExist) {

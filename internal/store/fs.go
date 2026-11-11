@@ -32,7 +32,10 @@ type Options struct {
 	Dir           string
 	Fsync         bool
 	MaxObjectSize int64
-	Logger        *slog.Logger
+	// Region is recorded on each new bucket as its LocationConstraint and
+	// reported by GetBucketLocation. Defaults to us-east-1.
+	Region string
+	Logger *slog.Logger
 }
 
 // FS is the filesystem Store. Layout under Dir:
@@ -47,6 +50,7 @@ type FS struct {
 	tmp     string
 	fsync   bool
 	maxSize int64
+	region  string
 	log     *slog.Logger
 	keys    stripes
 	lock    *os.File // exclusive flock on .faux3/lock
@@ -88,11 +92,15 @@ func Open(opts Options) (*FS, error) {
 	if opts.MaxObjectSize <= 0 {
 		opts.MaxObjectSize = 5 << 30
 	}
+	if opts.Region == "" {
+		opts.Region = "us-east-1"
+	}
 	s := &FS{
 		dir:     opts.Dir,
 		tmp:     filepath.Join(opts.Dir, ".faux3", "tmp"),
 		fsync:   opts.Fsync,
 		maxSize: opts.MaxObjectSize,
+		region:  opts.Region,
 		log:     opts.Logger,
 		buckets: map[string]*bucket{},
 	}
@@ -220,7 +228,7 @@ func (s *FS) CreateBucket(name string) error {
 	if _, ok := s.buckets[name]; ok {
 		return ErrBucketExists
 	}
-	info := Bucket{Name: name, Created: time.Now().UTC()}
+	info := Bucket{Name: name, Created: time.Now().UTC(), Region: s.region}
 	dir := s.bucketDir(name)
 	if err := os.MkdirAll(filepath.Join(dir, "objects"), 0o755); err != nil {
 		return err
