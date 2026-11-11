@@ -74,6 +74,38 @@ type commonPrefix struct {
 	Prefix string `xml:"Prefix"`
 }
 
+// deleteRequest is the DeleteObjects request body.
+type deleteRequest struct {
+	XMLName xml.Name       `xml:"Delete"`
+	Quiet   bool           `xml:"Quiet"`
+	Objects []deleteTarget `xml:"Object"`
+}
+
+type deleteTarget struct {
+	Key string `xml:"Key"`
+	// VersionId is parsed but ignored: faux3 has no versioning.
+	VersionId string `xml:"VersionId"`
+}
+
+// deleteResult is the DeleteObjects response. In quiet mode only Errors
+// are returned.
+type deleteResult struct {
+	XMLName xml.Name           `xml:"DeleteResult"`
+	Xmlns   string             `xml:"xmlns,attr"`
+	Deleted []deletedEntry     `xml:"Deleted"`
+	Errors  []deleteErrorEntry `xml:"Error"`
+}
+
+type deletedEntry struct {
+	Key string `xml:"Key"`
+}
+
+type deleteErrorEntry struct {
+	Key     string `xml:"Key"`
+	Code    string `xml:"Code"`
+	Message string `xml:"Message"`
+}
+
 func isoFormat(t time.Time) string { return t.UTC().Format(isoTime) }
 
 // writeXML sends a success document with the XML declaration.

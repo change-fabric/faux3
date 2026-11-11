@@ -110,9 +110,7 @@ type handlerFunc func(w http.ResponseWriter, r *http.Request, req *request)
 // subresources, and headers.
 func (s *Server) resolve(r *http.Request, req *request) (string, handlerFunc, error) {
 	switch r.Method {
-	case http.MethodGet, http.MethodPut, http.MethodHead, http.MethodDelete:
-	case http.MethodPost:
-		return "Unsupported", nil, notImplemented("POST requests (DeleteObjects, multipart uploads) are not supported")
+	case http.MethodGet, http.MethodPut, http.MethodHead, http.MethodDelete, http.MethodPost:
 	default:
 		return "Unsupported", nil, s3err.New("MethodNotAllowed", "The specified method is not allowed against this resource.").
 			With("Method", r.Method).With("ResourceType", resourceType(req))
@@ -125,6 +123,7 @@ func (s *Server) resolve(r *http.Request, req *request) (string, handlerFunc, er
 			return "Unsupported", nil, notImplemented("server-side encryption")
 		case strings.HasPrefix(lk, "x-amz-"):
 		case strings.HasPrefix(k, "response-") && objectGet:
+		case k == "delete" && r.Method == http.MethodPost && req.key == "":
 		case listQueryKeys[k]:
 		default:
 			return "Unsupported", nil, notImplemented("the ?" + k + " subresource")
@@ -132,6 +131,13 @@ func (s *Server) resolve(r *http.Request, req *request) (string, handlerFunc, er
 	}
 	if err := checkHeaders(r, req); err != nil {
 		return "Unsupported", nil, err
+	}
+
+	if r.Method == http.MethodPost {
+		if req.bucket != "" && req.key == "" && req.query.Has("delete") {
+			return "DeleteObjects", s.deleteObjects, nil
+		}
+		return "Unsupported", nil, notImplemented("POST requests (multipart uploads) are not supported")
 	}
 
 	if req.bucket == "" {

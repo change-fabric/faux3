@@ -5,6 +5,14 @@ The format is based on Keep a Changelog, and this project uses Semantic Versioni
 
 ## [Unreleased]
 
+### Added
+
+- DeleteObjects: `POST /<bucket>?delete` with a Delete body of up to 1000 keys, including quiet mode. Deleting a missing key succeeds; a missing bucket fails the whole request with 404; a malformed or empty body, or more than 1000 keys, returns 400 MalformedXML. This is the first supported POST. ADR 0013.
+
+### Changed
+
+- A POST into the request pipeline is no longer rejected at the method gate; unimplemented POSTs (multipart uploads) still return 501 NotImplemented at the routing step.
+
 ## [0.1.0] - 2026-11-10
 
 ### Added

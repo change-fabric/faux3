@@ -4,7 +4,7 @@ Rules for coding agents (and humans) working in this repository.
 
 ## Mission
 
-Faux3 is a single-container, S3-compatible object store for local Docker development: one container, one volume, one S3 endpoint, no AWS required. It implements nine operations with strict SigV4 and nothing else.
+Faux3 is a single-container, S3-compatible object store for local Docker development: one container, one volume, one S3 endpoint, no AWS required. It implements ten operations with strict SigV4 and nothing else.
 
 ## Non-goals
 

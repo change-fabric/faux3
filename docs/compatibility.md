@@ -1,6 +1,6 @@
 # Compatibility
 
-Faux3 implements nine S3 operations over path-style addressing (`http://host:9000/<bucket>/<key>`). Every other operation answers 501 NotImplemented with an S3 error document. Operations that may come later, and what each would unblock, are listed in [ROADMAP.md](../ROADMAP.md).
+Faux3 implements ten S3 operations over path-style addressing (`http://host:9000/<bucket>/<key>`). Every other operation answers 501 NotImplemented with an S3 error document. Operations that may come later, and what each would unblock, are listed in [ROADMAP.md](../ROADMAP.md).
 
 ## Operations
 
@@ -14,6 +14,7 @@ Faux3 implements nine S3 operations over path-style addressing (`http://host:900
 | GetObject | [API_GetObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html) | Range (single range), If-Match, If-None-Match, If-Modified-Since, If-Unmodified-Since, `response-*` overrides, `x-amz-checksum-mode: ENABLED` | Multi-range requests are served as 200 with the full body. No partNumber or versionId. |
 | HeadObject | [API_HeadObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html) | Same as GetObject | Errors carry no body, as in S3. |
 | DeleteObject | [API_DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html) | none | Deleting a missing key returns 204, as in S3. |
+| DeleteObjects | [API_DeleteObjects](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html) | `?delete`, a Delete body of up to 1000 keys, Quiet | Deleting a missing key succeeds. A missing bucket fails the whole request with 404. A malformed or empty body, or more than 1000 keys, returns 400 MalformedXML. VersionId is parsed and ignored. Content-MD5 is not required. |
 | ListObjectsV2 | [API_ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html) | prefix, delimiter, max-keys (capped at 1000), continuation-token, start-after, fetch-owner, encoding-type=url | Keys sort by byte order. Continuation tokens are opaque base64url of the last key. |
 | GetBucketLocation | [API_GetBucketLocation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html) | `?location` | Stub, not advertised. Returns `FAUX3_REGION` so the AWS CLI can discover the region. |
 
@@ -45,13 +46,13 @@ From the wire capture in [notes/wire-capture.md](notes/wire-capture.md) and the 
 
 | Command | Result | Reason and workaround |
 | --- | --- | --- |
-| `aws s3 mb`, `aws s3 rb` | Works | `rb --force` fails once it needs DeleteObjects; empty the bucket with `s3api delete-object` first. |
+| `aws s3 mb`, `aws s3 rb` | Works | `rb --force` empties the bucket with DeleteObjects. |
 | `aws s3 ls` | Works | ListBuckets and ListObjectsV2. |
 | `aws s3 cp` local to S3, S3 to local | Works up to `multipart_threshold` | Files over the threshold (8 MB by default) use multipart and fail with 501. Raise `multipart_threshold` in the CLI config (for example `64MB`). |
 | `aws s3 cp` S3 to S3 | Breaks | Needs CopyObject. Download and re-upload instead. |
 | `aws s3 mv` | Breaks | Needs CopyObject. |
 | `aws s3 rm` single key | Works | DeleteObject. |
-| `aws s3 rm --recursive` | Breaks | Needs DeleteObjects. Loop over keys with `aws s3api delete-object`. |
-| `aws s3 sync` | Works without `--delete` | `--delete` needs DeleteObjects. |
+| `aws s3 rm --recursive` | Works | DeleteObjects in batches of 1000. |
+| `aws s3 sync` | Works | `--delete` uses DeleteObjects. |
 | `aws s3 presign` | Works | Presigned GET. |
-| `aws s3api` for the nine operations | Works | |
+| `aws s3api` for the ten operations | Works | Includes `delete-objects`. |

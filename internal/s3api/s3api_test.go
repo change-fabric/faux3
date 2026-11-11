@@ -406,6 +406,56 @@ func TestListObjectsV2(t *testing.T) {
 	h.expect(h.do("GET", "/bkt?list-type=2&continuation-token=%21%21", nil), 400, "InvalidArgument")
 }
 
+func TestDeleteObjects(t *testing.T) {
+	h := newHarness(t)
+	h.expect(h.do("PUT", "/bkt", nil), 200, "")
+	for _, k := range []string{"a", "b", "c", "d"} {
+		h.expect(h.do("PUT", "/bkt/"+k, []byte("v")), 200, "")
+	}
+
+	// Non-quiet: every named key is reported deleted, including a missing
+	// one, with no Error elements.
+	body := `<Delete><Object><Key>a</Key></Object><Object><Key>b</Key></Object><Object><Key>gone</Key></Object></Delete>`
+	rec := h.do("POST", "/bkt?delete", []byte(body))
+	h.expect(rec, 200, "")
+	out := rec.Body.String()
+	if !strings.Contains(out, `<DeleteResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">`) ||
+		!strings.Contains(out, "<Deleted><Key>a</Key></Deleted>") || !strings.Contains(out, "<Deleted><Key>b</Key></Deleted>") ||
+		!strings.Contains(out, "<Deleted><Key>gone</Key></Deleted>") || strings.Contains(out, "<Error>") {
+		t.Fatalf("delete result: %s", out)
+	}
+	h.expect(h.do("HEAD", "/bkt/a", nil), 404, "")
+	h.expect(h.do("HEAD", "/bkt/b", nil), 404, "")
+	h.expect(h.do("HEAD", "/bkt/c", nil), 200, "")
+
+	// Quiet: no Deleted elements and no errors.
+	rec = h.do("POST", "/bkt?delete", []byte(`<Delete><Quiet>true</Quiet><Object><Key>c</Key></Object><Object><Key>missing</Key></Object></Delete>`))
+	h.expect(rec, 200, "")
+	out = rec.Body.String()
+	if strings.Contains(out, "<Deleted>") || strings.Contains(out, "<Error>") {
+		t.Fatalf("quiet result: %s", out)
+	}
+	h.expect(h.do("HEAD", "/bkt/c", nil), 404, "")
+
+	// Malformed and empty documents are MalformedXML.
+	h.expect(h.do("POST", "/bkt?delete", []byte("<not-xml")), 400, "MalformedXML")
+	h.expect(h.do("POST", "/bkt?delete", []byte(`<Delete></Delete>`)), 400, "MalformedXML")
+
+	// More than 1000 keys is rejected.
+	var big strings.Builder
+	big.WriteString("<Delete>")
+	for i := 0; i < maxDeleteKeys+1; i++ {
+		big.WriteString("<Object><Key>k")
+		big.WriteString(strconv.Itoa(i))
+		big.WriteString("</Key></Object>")
+	}
+	big.WriteString("</Delete>")
+	h.expect(h.do("POST", "/bkt?delete", []byte(big.String())), 400, "MalformedXML")
+
+	// A missing bucket fails the whole request.
+	h.expect(h.do("POST", "/missing?delete", []byte(`<Delete><Object><Key>a</Key></Object></Delete>`)), 404, "NoSuchBucket")
+}
+
 func TestNotImplementedMatrix(t *testing.T) {
 	h := newHarness(t)
 	h.expect(h.do("PUT", "/bkt", nil), 200, "")
@@ -436,7 +486,7 @@ func TestNotImplementedMatrix(t *testing.T) {
 	} {
 		h.expect(h.do("PUT", "/bkt/k2", []byte("x"), hdr...), 501, "NotImplemented")
 	}
-	h.expect(h.do("POST", "/bkt?delete", nil), 501, "NotImplemented")
+	h.expect(h.do("POST", "/bkt?delete", nil), 400, "MalformedXML")
 	h.expect(h.do("POST", "/bkt/k?uploads", nil), 501, "NotImplemented")
 	h.expect(h.do("GET", "/bkt", nil), 501, "NotImplemented")
 	h.expect(h.do("GET", "/bkt?list-type=1", nil), 501, "NotImplemented")

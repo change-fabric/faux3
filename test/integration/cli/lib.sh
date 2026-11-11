@@ -31,9 +31,10 @@ expect_fail() {
   fi
 }
 
-# cleanup_bucket empties and removes a bucket, ignoring errors. faux3 has
-# no DeleteObjects, so it deletes keys one at a time. It runs from EXIT
-# traps, so it turns off errexit to keep the script's own exit status.
+# cleanup_bucket empties and removes a bucket, ignoring errors. It deletes
+# keys one at a time to stay simple; delete.sh exercises batch DeleteObjects.
+# It runs from EXIT traps, so it turns off errexit to keep the script's own
+# exit status.
 cleanup_bucket() {
   set +e +o pipefail
   local b=$1 k

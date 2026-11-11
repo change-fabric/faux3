@@ -1,7 +1,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import {
-  CopyObjectCommand, DeleteObjectsCommand, CreateMultipartUploadCommand, PutBucketVersioningCommand,
+  CopyObjectCommand, CreateMultipartUploadCommand, PutBucketVersioningCommand,
   GetObjectAclCommand, ListObjectsCommand, PutObjectCommand, GetBucketLocationCommand,
 } from "@aws-sdk/client-s3";
 import { client, uniqueBucket, createBucket, emptyAndDelete, expectS3Error, closeClients } from "./lib.mjs";
@@ -18,7 +18,6 @@ after(async () => {
 
 const cases = {
   CopyObject: () => new CopyObjectCommand({ Bucket, Key: "dst", CopySource: `${Bucket}/src` }),
-  DeleteObjects: () => new DeleteObjectsCommand({ Bucket, Delete: { Objects: [{ Key: "src" }] } }),
   CreateMultipartUpload: () => new CreateMultipartUploadCommand({ Bucket, Key: "mp" }),
   PutBucketVersioning: () => new PutBucketVersioningCommand({ Bucket, VersioningConfiguration: { Status: "Enabled" } }),
   GetObjectAcl: () => new GetObjectAclCommand({ Bucket, Key: "src" }),

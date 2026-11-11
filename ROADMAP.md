@@ -1,6 +1,6 @@
 # Roadmap
 
-Faux3 ships a strict set of nine S3 operations (see [docs/compatibility.md](docs/compatibility.md)). Everything else answers 501 NotImplemented. This file is the source of truth for what may come next.
+Faux3 ships a strict set of ten S3 operations (see [docs/compatibility.md](docs/compatibility.md)). Everything else answers 501 NotImplemented. This file is the source of truth for what may come next.
 
 Rules for every entry:
 
@@ -10,15 +10,6 @@ Rules for every entry:
 - Roadmap issues carry the `roadmap`, `good first issue`, and `help wanted` labels (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Next
-
-### DeleteObjects
-
-Batch delete of up to 1000 keys in one POST.
-
-- Unblocks: `aws s3 rm --recursive`, `aws s3 sync --delete`, SDK bulk cleanup in test teardown.
-- AWS API: https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
-- Requires an ADR before implementation.
-- Issue: https://github.com/change-fabric/faux3/issues/2
 
 ### CopyObject
 

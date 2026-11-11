@@ -1,5 +1,5 @@
 // Package s3api is the faux3 S3 HTTP API: routing, authentication,
-// handlers for the nine supported operations, and CORS.
+// handlers for the ten supported operations, and CORS.
 package s3api
 
 import (

@@ -106,6 +106,7 @@ A runnable version lives in [examples/compose](examples/compose/compose.yaml), w
 | GetObject | Single byte ranges, conditionals, `response-*` overrides |
 | HeadObject | |
 | DeleteObject | |
+| DeleteObjects | Batch delete of up to 1000 keys, quiet mode |
 | ListObjectsV2 | Prefix, delimiter, pagination, `encoding-type=url` |
 
 Everything else answers 501 NotImplemented, apart from a GetBucketLocation stub for CLI region discovery. Details, client versions tested, and which CLI commands work are in [docs/compatibility.md](docs/compatibility.md). Planned and unplanned operations are tracked in [ROADMAP.md](ROADMAP.md).
