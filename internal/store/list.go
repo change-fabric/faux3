@@ -135,6 +135,7 @@ func (s *FS) List(bucketName string, p ListParams) (ListResult, error) {
 	}
 	if res.IsTruncated {
 		res.NextContinuationToken = EncodeToken(last)
+		res.NextMarker = last
 	}
 	return res, nil
 }

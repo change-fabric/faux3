@@ -8,7 +8,7 @@ Multipart upload, IAM, ACLs, and bucket policies, versioning, lifecycle rules, o
 
 ## 501 policy
 
-Only nine operations are implemented (see [compatibility.md](compatibility.md)). Any other subresource, any POST, ListObjects V1, CopyObject, tagging, non-private canned ACLs, `If-Match` on PUT, and `x-amz-server-side-encryption*` headers return 501 NotImplemented. Faux3 fails loudly instead of silently ignoring a feature your code depends on. GetBucketLocation answers with a stub so the AWS CLI can discover the region; it is not advertised as supported.
+Only ten operations are implemented (see [compatibility.md](compatibility.md)). Any other subresource, any POST, CopyObject, tagging, non-private canned ACLs, `If-Match` on PUT, and `x-amz-server-side-encryption*` headers return 501 NotImplemented. Faux3 fails loudly instead of silently ignoring a feature your code depends on. GetBucketLocation answers with a stub so the AWS CLI can discover the region; it is not advertised as supported.
 
 ## AWS CLI commands that break
 

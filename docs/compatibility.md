@@ -1,6 +1,6 @@
 # Compatibility
 
-Faux3 implements nine S3 operations over path-style addressing (`http://host:9000/<bucket>/<key>`). Every other operation answers 501 NotImplemented with an S3 error document. Operations that may come later, and what each would unblock, are listed in [ROADMAP.md](../ROADMAP.md).
+Faux3 implements ten S3 operations over path-style addressing (`http://host:9000/<bucket>/<key>`). Every other operation answers 501 NotImplemented with an S3 error document. Operations that may come later, and what each would unblock, are listed in [ROADMAP.md](../ROADMAP.md).
 
 ## Operations
 
@@ -15,6 +15,7 @@ Faux3 implements nine S3 operations over path-style addressing (`http://host:900
 | HeadObject | [API_HeadObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadObject.html) | Same as GetObject | Errors carry no body, as in S3. |
 | DeleteObject | [API_DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html) | none | Deleting a missing key returns 204, as in S3. |
 | ListObjectsV2 | [API_ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html) | prefix, delimiter, max-keys (capped at 1000), continuation-token, start-after, fetch-owner, encoding-type=url | Keys sort by byte order. Continuation tokens are opaque base64url of the last key. |
+| ListObjects (V1) | [API_ListObjects](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html) | prefix, delimiter, marker, max-keys (capped at 1000), encoding-type=url | A bucket GET with no `list-type`. Keys sort by byte order. NextMarker is returned only when a delimiter is set; otherwise resume from the last key. `list-type` other than 2 returns 400 InvalidArgument. |
 | GetBucketLocation | [API_GetBucketLocation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html) | `?location` | Stub, not advertised. Returns `FAUX3_REGION` so the AWS CLI can discover the region. |
 
 ## Authentication
@@ -54,4 +55,4 @@ From the wire capture in [notes/wire-capture.md](notes/wire-capture.md) and the 
 | `aws s3 rm --recursive` | Breaks | Needs DeleteObjects. Loop over keys with `aws s3api delete-object`. |
 | `aws s3 sync` | Works without `--delete` | `--delete` needs DeleteObjects. |
 | `aws s3 presign` | Works | Presigned GET. |
-| `aws s3api` for the nine operations | Works | |
+| `aws s3api` for the ten operations | Works | Includes `list-objects` (V1) and `list-objects-v2`. |

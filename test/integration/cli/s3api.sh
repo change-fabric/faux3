@@ -30,6 +30,14 @@ prefixes=$(aws s3api list-objects-v2 --bucket "$B" --prefix dir/ --delimiter / -
 count=$(aws s3api list-objects-v2 --bucket "$B" --query 'length(Contents)' --output text)
 [ "$count" = 3 ] || { echo "count: $count" >&2; exit 1; }
 
+# ListObjects V1 (s3api list-objects) returns the same view as V2.
+v1keys=$(aws s3api list-objects --bucket "$B" --prefix dir/ --delimiter / --query 'Contents[].Key' --output text)
+[ "$v1keys" = "dir/one file" ] || { echo "v1 keys: $v1keys" >&2; exit 1; }
+v1prefixes=$(aws s3api list-objects --bucket "$B" --prefix dir/ --delimiter / --query 'CommonPrefixes[].Prefix' --output text)
+[ "$v1prefixes" = "dir/sub/" ] || { echo "v1 prefixes: $v1prefixes" >&2; exit 1; }
+v1count=$(aws s3api list-objects --bucket "$B" --query 'length(Contents)' --output text)
+[ "$v1count" = 3 ] || { echo "v1 count: $v1count" >&2; exit 1; }
+
 for k in "dir/one file" dir/sub/two top; do aws s3api delete-object --bucket "$B" --key "$k"; done
 expect_fail "Not Found\|404" aws s3api head-object --bucket "$B" --key top
 aws s3api delete-bucket --bucket "$B"

@@ -1,6 +1,6 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { PutObjectCommand, ListObjectsV2Command, ListObjectsCommand } from "@aws-sdk/client-s3";
 import { client, uniqueBucket, createBucket, emptyAndDelete, closeClients } from "./lib.mjs";
 
 const Bucket = uniqueBucket("list");
@@ -100,4 +100,45 @@ test("max-keys 0", async () => {
   const out = await client.send(new ListObjectsV2Command({ Bucket, MaxKeys: 0 }));
   assert.equal(out.KeyCount, 0);
   assert.equal(out.Contents, undefined);
+});
+
+test("v1 prefix", async () => {
+  const out = await client.send(new ListObjectsCommand({ Bucket, Prefix: "dir/a/" }));
+  assert.deepEqual(out.Contents.map((o) => o.Key), ["dir/a/1", "dir/a/2"]);
+  assert.equal(out.IsTruncated, false);
+  // V1 carries the owner on every object without asking for it.
+  assert.ok(out.Contents[0].Owner?.ID);
+});
+
+test("v1 delimiter and CommonPrefixes", async () => {
+  const out = await client.send(new ListObjectsCommand({ Bucket, Prefix: "dir/", Delimiter: "/" }));
+  assert.deepEqual(out.Contents.map((o) => o.Key), ["dir/c"]);
+  assert.deepEqual(out.CommonPrefixes.map((p) => p.Prefix), ["dir/a/", "dir/b/"]);
+});
+
+test("v1 marker pagination across 2500 keys", async () => {
+  const seen = [];
+  let Marker;
+  let pages = 0;
+  do {
+    const out = await client.send(new ListObjectsCommand({ Bucket, MaxKeys: 700, Marker }));
+    seen.push(...out.Contents.map((o) => o.Key));
+    // No delimiter, so S3 sends no NextMarker: resume from the last key.
+    Marker = out.IsTruncated ? out.Contents.at(-1).Key : undefined;
+    pages++;
+  } while (Marker);
+  assert.equal(pages, Math.ceil(allKeys.length / 700));
+  assert.deepEqual(seen, allKeys);
+});
+
+test("v1 NextMarker is set when a delimiter is used", async () => {
+  const pages = [];
+  let Marker;
+  do {
+    const out = await client.send(new ListObjectsCommand({ Bucket, Delimiter: "/", MaxKeys: 1, Marker }));
+    pages.push([...(out.CommonPrefixes ?? []).map((p) => p.Prefix), ...(out.Contents ?? []).map((o) => o.Key)]);
+    Marker = out.NextMarker;
+  } while (Marker);
+  assert.deepEqual(pages.flat(), ["dir/", "many/", "sp ace/", "top"]);
+  assert.ok(pages.every((p) => p.length === 1));
 });

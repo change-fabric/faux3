@@ -1,6 +1,6 @@
 # Roadmap
 
-Faux3 ships a strict set of nine S3 operations (see [docs/compatibility.md](docs/compatibility.md)). Everything else answers 501 NotImplemented. This file is the source of truth for what may come next.
+Faux3 ships a strict set of ten S3 operations (see [docs/compatibility.md](docs/compatibility.md)). Everything else answers 501 NotImplemented. This file is the source of truth for what may come next.
 
 Rules for every entry:
 
@@ -28,15 +28,6 @@ Server-side copy from one key (or bucket) to another.
 - AWS API: https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html
 - Requires an ADR before implementation.
 - Issue: https://github.com/change-fabric/faux3/issues/3
-
-### ListObjects (V1)
-
-The original marker-based listing API.
-
-- Unblocks: older SDKs and tools that still call V1 listing, such as some backup and static-site tools.
-- AWS API: https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html
-- Requires an ADR before implementation.
-- Issue: https://github.com/change-fabric/faux3/issues/4
 
 ### GetBucketLocation (real)
 

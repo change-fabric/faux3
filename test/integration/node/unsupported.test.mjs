@@ -2,7 +2,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import {
   CopyObjectCommand, DeleteObjectsCommand, CreateMultipartUploadCommand, PutBucketVersioningCommand,
-  GetObjectAclCommand, ListObjectsCommand, PutObjectCommand, GetBucketLocationCommand,
+  GetObjectAclCommand, PutObjectCommand, GetBucketLocationCommand,
 } from "@aws-sdk/client-s3";
 import { client, uniqueBucket, createBucket, emptyAndDelete, expectS3Error, closeClients } from "./lib.mjs";
 
@@ -22,7 +22,6 @@ const cases = {
   CreateMultipartUpload: () => new CreateMultipartUploadCommand({ Bucket, Key: "mp" }),
   PutBucketVersioning: () => new PutBucketVersioningCommand({ Bucket, VersioningConfiguration: { Status: "Enabled" } }),
   GetObjectAcl: () => new GetObjectAclCommand({ Bucket, Key: "src" }),
-  ListObjectsV1: () => new ListObjectsCommand({ Bucket }),
   PutObjectSSE: () => new PutObjectCommand({ Bucket, Key: "sse", Body: "x", ServerSideEncryption: "AES256" }),
 };
 

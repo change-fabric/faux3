@@ -61,6 +61,25 @@ type listBucketResult struct {
 	CommonPrefixes        []commonPrefix `xml:"CommonPrefixes"`
 }
 
+// listBucketResultV1 is the ListObjects (V1) response. It differs from
+// listBucketResult: a caller-visible Marker and NextMarker in place of the
+// continuation tokens, and no KeyCount. Marker is always present, even
+// empty, as in S3.
+type listBucketResultV1 struct {
+	XMLName        xml.Name       `xml:"ListBucketResult"`
+	Xmlns          string         `xml:"xmlns,attr"`
+	Name           string         `xml:"Name"`
+	Prefix         string         `xml:"Prefix"`
+	Marker         string         `xml:"Marker"`
+	NextMarker     string         `xml:"NextMarker,omitempty"`
+	MaxKeys        int            `xml:"MaxKeys"`
+	Delimiter      string         `xml:"Delimiter,omitempty"`
+	EncodingType   string         `xml:"EncodingType,omitempty"`
+	IsTruncated    bool           `xml:"IsTruncated"`
+	Contents       []objectEntry  `xml:"Contents"`
+	CommonPrefixes []commonPrefix `xml:"CommonPrefixes"`
+}
+
 type objectEntry struct {
 	Key          string `xml:"Key"`
 	LastModified string `xml:"LastModified"`

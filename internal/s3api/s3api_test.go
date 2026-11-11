@@ -406,6 +406,72 @@ func TestListObjectsV2(t *testing.T) {
 	h.expect(h.do("GET", "/bkt?list-type=2&continuation-token=%21%21", nil), 400, "InvalidArgument")
 }
 
+func TestListObjectsV1(t *testing.T) {
+	h := newHarness(t)
+	h.expect(h.do("PUT", "/bkt", nil), 200, "")
+	for _, k := range []string{"a", "dir/x", "dir/y", "dir/sub/z", "e f", "z"} {
+		h.expect(h.do("PUT", "/bkt/"+strings.ReplaceAll(k, " ", "%20"), []byte("v")), 200, "")
+	}
+
+	// A bucket GET with no list-type is a V1 request: all keys, an empty
+	// Marker, and an Owner on every object (V2 gates Owner behind fetch-owner).
+	rec := h.do("GET", "/bkt", nil)
+	b := rec.Body.String()
+	if !strings.Contains(b, `<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">`) ||
+		!strings.Contains(b, "<Marker></Marker>") || strings.Contains(b, "<KeyCount>") ||
+		!strings.Contains(b, "<Owner><ID>") || !strings.Contains(b, "<IsTruncated>false</IsTruncated>") {
+		t.Fatalf("v1 full: %s", b)
+	}
+
+	// Delimiter and max-keys: one object, one common prefix, and a
+	// NextMarker because a delimiter is set.
+	rec = h.do("GET", "/bkt?delimiter=%2F&max-keys=2", nil)
+	b = rec.Body.String()
+	if !strings.Contains(b, "<Key>a</Key>") || !strings.Contains(b, "<Prefix>dir/</Prefix>") ||
+		!strings.Contains(b, "<IsTruncated>true</IsTruncated>") || !strings.Contains(b, "<NextMarker>dir/</NextMarker>") {
+		t.Fatalf("v1 page 1: %s", b)
+	}
+	rec = h.do("GET", "/bkt?delimiter=%2F&marker=dir%2F", nil)
+	b = rec.Body.String()
+	if !strings.Contains(b, "<Key>e f</Key>") || !strings.Contains(b, "<Key>z</Key>") ||
+		strings.Contains(b, "<Key>dir/") || strings.Contains(b, "<CommonPrefixes>") ||
+		!strings.Contains(b, "<Marker>dir/</Marker>") || strings.Contains(b, "<NextMarker>") {
+		t.Fatalf("v1 page 2: %s", b)
+	}
+
+	// Without a delimiter S3 omits NextMarker even when truncated.
+	rec = h.do("GET", "/bkt?max-keys=1", nil)
+	b = rec.Body.String()
+	if !strings.Contains(b, "<Key>a</Key>") || !strings.Contains(b, "<IsTruncated>true</IsTruncated>") ||
+		strings.Contains(b, "<NextMarker>") {
+		t.Fatalf("v1 no-delimiter truncation: %s", b)
+	}
+
+	rec = h.do("GET", "/bkt?prefix=dir%2F&marker=dir%2Fsub%2Fz", nil)
+	b = rec.Body.String()
+	if !strings.Contains(b, "<Key>dir/x</Key>") || !strings.Contains(b, "<Key>dir/y</Key>") ||
+		strings.Contains(b, "dir/sub/z</Key>") || !strings.Contains(b, "<Marker>dir/sub/z</Marker>") {
+		t.Fatalf("v1 prefix and marker: %s", b)
+	}
+
+	rec = h.do("GET", "/bkt?encoding-type=url&prefix=e", nil)
+	b = rec.Body.String()
+	if !strings.Contains(b, "<Key>e+f</Key>") || !strings.Contains(b, "<EncodingType>url</EncodingType>") {
+		t.Fatalf("v1 url encoding: %s", b)
+	}
+
+	rec = h.do("GET", "/bkt?max-keys=0", nil)
+	if !strings.Contains(rec.Body.String(), "<IsTruncated>false</IsTruncated>") || strings.Contains(rec.Body.String(), "<Key>") {
+		t.Fatalf("v1 max-keys 0: %s", rec.Body)
+	}
+
+	h.expect(h.do("GET", "/bkt?max-keys=-1", nil), 400, "InvalidArgument")
+	h.expect(h.do("GET", "/bkt?max-keys=x", nil), 400, "InvalidArgument")
+	h.expect(h.do("GET", "/bkt?encoding-type=bogus", nil), 400, "InvalidArgument")
+	h.expect(h.do("GET", "/bkt?list-type=1", nil), 400, "InvalidArgument")
+	h.expect(h.do("GET", "/missing", nil), 404, "NoSuchBucket")
+}
+
 func TestNotImplementedMatrix(t *testing.T) {
 	h := newHarness(t)
 	h.expect(h.do("PUT", "/bkt", nil), 200, "")
@@ -438,8 +504,7 @@ func TestNotImplementedMatrix(t *testing.T) {
 	}
 	h.expect(h.do("POST", "/bkt?delete", nil), 501, "NotImplemented")
 	h.expect(h.do("POST", "/bkt/k?uploads", nil), 501, "NotImplemented")
-	h.expect(h.do("GET", "/bkt", nil), 501, "NotImplemented")
-	h.expect(h.do("GET", "/bkt?list-type=1", nil), 501, "NotImplemented")
+	h.expect(h.do("GET", "/bkt?list-type=1", nil), 400, "InvalidArgument")
 	h.expect(h.do("GET", "/bkt?response-content-type=x", nil), 501, "NotImplemented")
 	h.expect(h.do("PATCH", "/bkt/k", nil), 405, "MethodNotAllowed")
 	h.expect(h.do("PUT", "/", nil), 405, "MethodNotAllowed")

@@ -1,6 +1,6 @@
 # 0003. Path-style addressing and a strict set of nine operations
 
-- Status: Accepted
+- Status: Accepted (amended by ADR 0011, which adds ListObjects V1)
 - Diagram: docs/diagrams/request-pipeline.svg
 
 ## Context

@@ -14,3 +14,4 @@ MADR-lite records: Status, Context, Decision, Consequences, Alternatives. New de
 | [0008](0008-container-image-and-healthcheck.md) | Container image and health check | Accepted |
 | [0009](0009-releases-ghcr-and-0x-versioning.md) | Releases to GHCR and 0.x versioning | Accepted |
 | [0010](0010-real-client-compatibility-testing-in-compose.md) | Real-client compatibility testing in Compose | Accepted |
+| [0011](0011-listobjects-v1.md) | ListObjects (V1) | Proposed |

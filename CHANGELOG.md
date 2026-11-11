@@ -5,6 +5,14 @@ The format is based on Keep a Changelog, and this project uses Semantic Versioni
 
 ## [Unreleased]
 
+### Added
+
+- ListObjects (V1): a bucket GET with no `list-type`, with prefix, delimiter, marker, max-keys, and `encoding-type=url`. NextMarker is returned when a delimiter is set. ADR 0011.
+
+### Changed
+
+- A `list-type` query parameter other than `2` now returns 400 InvalidArgument (`Invalid List Type`) instead of 501 NotImplemented, matching AWS.
+
 ## [0.1.0] - 2026-11-10
 
 ### Added

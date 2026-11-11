@@ -77,12 +77,17 @@ type ListParams struct {
 	StartAfter        string
 }
 
-// ListResult is the ListObjectsV2 output.
+// ListResult is the output shared by ListObjectsV2 and ListObjects V1.
 type ListResult struct {
-	Objects               []Meta
-	CommonPrefixes        []string
-	IsTruncated           bool
+	Objects        []Meta
+	CommonPrefixes []string
+	IsTruncated    bool
+	// NextContinuationToken is the opaque V2 resume token for the last
+	// returned key or common prefix. Empty unless IsTruncated.
 	NextContinuationToken string
+	// NextMarker is the same resume point in raw form, for the V1 marker.
+	// Empty unless IsTruncated.
+	NextMarker string
 }
 
 // Store is the storage backend used by the S3 handlers.

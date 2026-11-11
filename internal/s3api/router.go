@@ -50,7 +50,7 @@ type request struct {
 var listQueryKeys = map[string]bool{
 	"list-type": true, "prefix": true, "delimiter": true, "max-keys": true,
 	"continuation-token": true, "start-after": true, "fetch-owner": true,
-	"encoding-type": true, "x-id": true, "location": true,
+	"encoding-type": true, "x-id": true, "location": true, "marker": true,
 }
 
 func (s *Server) route(w http.ResponseWriter, r *http.Request) string {
@@ -153,10 +153,15 @@ func (s *Server) resolve(r *http.Request, req *request) (string, handlerFunc, er
 		if req.query.Has("location") {
 			return "GetBucketLocation", s.getBucketLocation, nil
 		}
-		if req.query.Get("list-type") != "2" {
-			return "ListObjects", nil, notImplemented("ListObjects (V1); use ListObjectsV2 (list-type=2)")
+		switch lt := req.query.Get("list-type"); lt {
+		case "":
+			return "ListObjects", s.listObjects, nil
+		case "2":
+			return "ListObjectsV2", s.listObjectsV2, nil
+		default:
+			return "ListObjectsV2", nil, s3err.New("InvalidArgument", "Invalid List Type").
+				With("ArgumentName", "list-type").With("ArgumentValue", lt)
 		}
-		return "ListObjectsV2", s.listObjectsV2, nil
 	}
 	switch r.Method {
 	case http.MethodPut:
