@@ -1,3 +1,3 @@
-FROM amazon/aws-cli:2.39.7
+FROM amazon/aws-cli:2.42.1
 COPY . /tests
 ENTRYPOINT ["bash", "/tests/run.sh"]
